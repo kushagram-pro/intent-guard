@@ -1,0 +1,6 @@
+google-genai
+streamlit
+fastapi
+python-dotenv
+jinja2
+uvicorn

@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% set body_class = "marketing-body" %}
+{% block content %}
+<div class="shell">
+    <header class="marketing-nav">
+        <div class="brand-lockup">
+            <span class="brand-mark">IG</span>
+            <div>
+                <p class="eyebrow">Financial Intent Safety Engine</p>
+                <h1>Intent Guard</h1>
+            </div>
+        </div>
+        <nav class="nav-actions">
+            <a href="/login" class="ghost-link">Login</a>
+            <a href="/dashboard" class="primary-link">Open Dashboard</a>
+        </nav>
+    </header>
+
+    <main class="marketing-grid">
+        <section class="hero-panel">
+            <p class="hero-kicker">Trade automation with a safety layer in front</p>
+            <h2>Intent Guard understands the intent behind a trading instruction before any agent gets to execute it.</h2>
+            <p class="hero-copy">{{ app_description }}</p>
+            <div class="hero-actions">
+                <a href="/login" class="primary-link">Try Demo Login</a>
+                <a href="/openclaw" class="secondary-link">See OpenClaw Flow</a>
+            </div>
+            <div class="hero-cards">
+                <article class="mini-card">
+                    <span>Intent Parsing</span>
+                    <strong>Breaks prompts into monitor, buy, and sell actions.</strong>
+                </article>
+                <article class="mini-card">
+                    <span>Policy Engine</span>
+                    <strong>Blocks vague or unsafe financial triggers before execution.</strong>
+                </article>
+                <article class="mini-card">
+                    <span>Agent Interception</span>
+                    <strong>Lets OpenClaw simulate actions only after safety approval.</strong>
+                </article>
+            </div>
+        </section>
+
+        <aside class="story-panel">
+            <div class="story-card">
+                <p class="eyebrow">Project intent</p>
+                <h3>What this project is trying to solve</h3>
+                <p>Trading agents move fast. Intent Guard slows down the dangerous part: it turns fuzzy human instructions into structured intents, checks policy and risk, and only then lets a simulated execution layer continue.</p>
+            </div>
+            <div class="story-card">
+                <p class="eyebrow">Core decisions</p>
+                <ul class="plain-list">
+                    <li><strong>ALLOW</strong> when the instruction is explicit and safe.</li>
+                    <li><strong>ASK</strong> when more detail or confirmation is needed.</li>
+                    <li><strong>BLOCK</strong> when the trade violates safety rules.</li>
+                    <li><strong>PARTIAL</strong> when a mixed instruction needs selective execution.</li>
+                </ul>
+            </div>
+            <div class="story-card accent-card">
+                <p class="eyebrow">Demo access</p>
+                <p>Use the built-in demo account to explore the new website and ChatGPT-style dashboard.</p>
+                <p><strong>Email:</strong> demo@intentguard.ai</p>
+                <p><strong>Password:</strong> intentguard123</p>
+            </div>
+        </aside>
+    </main>
+</div>
+{% endblock %}
