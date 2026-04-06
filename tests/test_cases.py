@@ -1,6 +1,7 @@
 import unittest
 from unittest.mock import patch
 
+from agent.openclaw_adapter import simulate_openclaw_agent
 from app import process_input
 from core.ambiguity_checker import build_clarification_plan
 from core.enforcement import enforce_decision
@@ -191,6 +192,58 @@ class PolicyAndEnforcementTests(unittest.TestCase):
         self.assertIn("safe_to_execute", result["final"])
         self.assertIn("decision_basis", result["final"])
         self.assertIn("clarification", result)
+
+    @patch("app.process_input")
+    def test_openclaw_agent_intercepts_and_simulates_execution(self, mock_process_input):
+        mock_process_input.return_value = {
+            "intent_data": {
+                "intents": [
+                    {"type": "monitor", "stock": "AAPL", "condition": "", "confidence": 0.93},
+                    {"type": "buy", "stock": "TSLA", "condition": "whenever good", "confidence": 0.91},
+                ],
+                "ambiguous": True,
+                "risk_level": "medium",
+            },
+            "evaluation": {},
+            "final": {
+                "decision": "PARTIAL",
+                "allowed_actions": [{"type": "monitor", "stock": "AAPL"}],
+                "blocked_actions": [{"type": "buy", "stock": "TSLA"}],
+                "clarification_actions": [],
+                "reasons": ["The execution condition is too vague for a financial trade."],
+                "clarification_needed": True,
+                "safe_to_execute": [{"type": "monitor", "stock": "AAPL"}],
+                "unsafe_to_execute": [{"type": "buy", "stock": "TSLA"}],
+                "decision_basis": {
+                    "has_allowed_actions": True,
+                    "has_blocked_actions": True,
+                    "has_clarification_actions": False,
+                },
+                "summary": {
+                    "intent_count": 2,
+                    "global_risk_level": "medium",
+                    "global_ambiguous": True,
+                },
+            },
+            "clarification": {
+                "needed": True,
+                "message": "The request cannot be executed safely yet.",
+                "questions": [],
+                "summary": {
+                    "question_count": 1,
+                    "blocked_action_count": 1,
+                    "clarification_action_count": 0,
+                },
+            },
+        }
+
+        result = simulate_openclaw_agent("Watch AAPL and buy TSLA whenever good")
+
+        self.assertEqual(result["attempt"]["status"], "INTERCEPTED")
+        self.assertEqual(result["execution_result"]["agent_decision"], "PARTIAL")
+        self.assertTrue(result["execution_result"]["can_execute_any_action"])
+        self.assertTrue(result["execution_result"]["requires_user_clarification"])
+        self.assertEqual(len(result["execution_result"]["execution_log"]), 2)
 
 
 if __name__ == "__main__":

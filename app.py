@@ -1,5 +1,6 @@
 import json
 
+from agent.openclaw_adapter import simulate_openclaw_agent
 from core.ambiguity_checker import build_clarification_plan
 from core.enforcement import enforce_decision
 from models.intent_parser import parse_intent
@@ -31,5 +32,5 @@ def process_input(user_input):
 
 if __name__ == "__main__":
     user_input = input("Enter instruction: ")
-    result = process_input(user_input)
+    result = simulate_openclaw_agent(user_input)
     print(json.dumps(result, indent=2))
