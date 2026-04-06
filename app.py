@@ -1,8 +1,9 @@
 import json
 
+from core.ambiguity_checker import build_clarification_plan
+from core.enforcement import enforce_decision
 from models.intent_parser import parse_intent
 from core.policy_engine import evaluate_intents
-from core.enforcement import enforce_decision
 
 def process_input(user_input):
     intent_data = parse_intent(user_input)
@@ -13,11 +14,18 @@ def process_input(user_input):
         evaluated,
         intent_data["ambiguous"]
     )
+    clarification = build_clarification_plan(
+        user_input,
+        intent_data,
+        evaluated,
+        final_decision,
+    )
 
     return {
         "intent_data": intent_data,
         "evaluation": evaluated,
-        "final": final_decision
+        "final": final_decision,
+        "clarification": clarification,
     }
 
 
