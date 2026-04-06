@@ -6,6 +6,7 @@ from agent.openclaw_adapter import simulate_openclaw_agent
 from app import process_input
 from core.ambiguity_checker import build_clarification_plan
 from core.enforcement import enforce_decision
+from core.explainability_engine import build_explainability_report
 from core.policy_engine import evaluate_intents
 from models.intent_parser import _normalize_response
 
@@ -53,6 +54,38 @@ class IntentParserNormalizationTests(unittest.TestCase):
 
 
 class PolicyAndEnforcementTests(unittest.TestCase):
+    def test_explainability_report_contains_auditable_fields(self):
+        intent_data = {
+            "intents": [
+                {"type": "buy", "stock": "AAPL", "condition": "if price drops below 180", "confidence": 0.95}
+            ],
+            "ambiguous": False,
+            "risk_level": "medium",
+        }
+
+        evaluation = evaluate_intents(intent_data)
+        final = enforce_decision(evaluation, intent_data["ambiguous"])
+        clarification = build_clarification_plan(
+            "Buy AAPL if price drops below 180",
+            intent_data,
+            evaluation,
+            final,
+        )
+        explainability = build_explainability_report(
+            "Buy AAPL if price drops below 180",
+            intent_data,
+            evaluation,
+            final,
+            clarification,
+        )
+
+        self.assertIn("summary", explainability)
+        self.assertIn("parser_summary", explainability)
+        self.assertIn("final_explanation", explainability)
+        self.assertIn("intent_explanations", explainability)
+        self.assertIn("reason_log", explainability)
+        self.assertEqual(explainability["summary"]["final_decision"], "ALLOW")
+
     def test_amoriq_simulator_only_forwards_approved_actions(self):
         result = simulate_amoriq_execution(
             [
@@ -205,6 +238,7 @@ class PolicyAndEnforcementTests(unittest.TestCase):
         self.assertIn("safe_to_execute", result["final"])
         self.assertIn("decision_basis", result["final"])
         self.assertIn("clarification", result)
+        self.assertIn("explainability", result)
 
     @patch("app.process_input")
     def test_openclaw_agent_intercepts_and_simulates_execution(self, mock_process_input):
@@ -248,6 +282,11 @@ class PolicyAndEnforcementTests(unittest.TestCase):
                     "clarification_action_count": 0,
                 },
             },
+            "explainability": {
+                "summary": {
+                    "final_decision": "PARTIAL",
+                }
+            },
         }
 
         result = simulate_openclaw_agent("Watch AAPL and buy TSLA whenever good")
@@ -258,6 +297,7 @@ class PolicyAndEnforcementTests(unittest.TestCase):
         self.assertTrue(result["execution_result"]["requires_user_clarification"])
         self.assertEqual(len(result["execution_result"]["execution_log"]), 2)
         self.assertEqual(result["execution_result"]["amoriq_execution"]["forwarded_count"], 1)
+        self.assertIn("explainability", result)
 
 
 if __name__ == "__main__":

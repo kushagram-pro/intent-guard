@@ -1,6 +1,6 @@
 # Financial Intent Safety Engine
 
-This project now covers six phases:
+This project now covers seven phases:
 
 - Phase 1: Gemini-powered structured intent parsing
 - Phase 2: Financial policy checks
@@ -8,6 +8,7 @@ This project now covers six phases:
 - Phase 4: Clarification engine for ambiguous or unsafe requests
 - Phase 5: OpenClaw agent simulation and interception layer
 - Phase 6: Amoriq-style simulated financial execution layer
+- Phase 7: Explainability engine for auditable decision reasoning
 
 ## Phase 3 goal
 
@@ -55,6 +56,18 @@ The Amoriq layer:
 - assigns mock order IDs for forwarded actions
 - never executes blocked or clarification-required actions
 - records a realistic execution trail for downstream auditing
+
+## Phase 7 goal
+
+Explain every decision in a clear, auditable way.
+
+The explainability engine:
+
+- shows parser confidence and risk level
+- explains why each action was allowed, blocked, or sent for clarification
+- records rule hits and human-readable reasons
+- produces reason logs across parser, policy, and enforcement stages
+- provides an audit-friendly summary for judges, reviewers, and demos
 
 ## Final decisions
 
@@ -162,6 +175,31 @@ The core brain now returns one of:
         "amoriq_order_id": "amq-sim-001"
       }
     ]
+  },
+  "explainability": {
+    "summary": {
+      "user_input": "Buy AAPL if price drops below 180",
+      "final_decision": "ALLOW",
+      "risk_level": "medium",
+      "ambiguous": false,
+      "clarification_needed": false
+    },
+    "parser_summary": {
+      "intent_count": 1,
+      "ambiguous": false,
+      "risk_level": "medium",
+      "confidence": {
+        "values": [0.96],
+        "min": 0.96,
+        "max": 0.96,
+        "average": 0.96
+      }
+    },
+    "final_explanation": {
+      "decision": "ALLOW",
+      "verdict": "All requested actions passed the safety checks and are eligible for execution.",
+      "reasons": []
+    }
   }
 }
 ```
@@ -177,6 +215,7 @@ The core brain now returns one of:
 - Mixed outcomes across intents return `PARTIAL`.
 - Ambiguous or blocked intents produce targeted clarification questions.
 - Vague phrases are converted into explicit follow-up prompts asking for price, percentage, or measurable criteria.
+- Every major decision now includes confidence display, risk display, and auditable reason logs.
 
 ## Clarification examples
 

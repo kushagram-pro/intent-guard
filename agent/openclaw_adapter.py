@@ -1,4 +1,5 @@
 from agent.amoriq_adapter import simulate_amoriq_execution
+from core.explainability_engine import build_explainability_report
 
 
 class OpenClawAgent:
@@ -11,6 +12,14 @@ class OpenClawAgent:
 
         safety_result = process_input(user_instruction)
         execution_result = _build_execution_result(safety_result)
+        explainability = build_explainability_report(
+            user_instruction,
+            safety_result.get("intent_data", {}),
+            safety_result.get("evaluation", {}),
+            safety_result.get("final", {}),
+            safety_result.get("clarification", {}),
+            execution_result,
+        )
 
         return {
             "agent": {
@@ -23,6 +32,7 @@ class OpenClawAgent:
             },
             "safety_result": safety_result,
             "execution_result": execution_result,
+            "explainability": explainability,
         }
 
 
