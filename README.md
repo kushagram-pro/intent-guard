@@ -1,12 +1,13 @@
 # Financial Intent Safety Engine
 
-This project now covers five phases:
+This project now covers six phases:
 
 - Phase 1: Gemini-powered structured intent parsing
 - Phase 2: Financial policy checks
 - Phase 3: Enforcement engine and final safety decisioning
 - Phase 4: Clarification engine for ambiguous or unsafe requests
 - Phase 5: OpenClaw agent simulation and interception layer
+- Phase 6: Amoriq-style simulated financial execution layer
 
 ## Phase 3 goal
 
@@ -42,6 +43,18 @@ The OpenClaw layer:
 - intercepts unsafe actions before execution
 - simulates execution only for actions marked safe
 - produces an execution log showing what was executed, blocked, or paused for clarification
+
+## Phase 6 goal
+
+Show realistic financial execution by forwarding only approved actions into an Amoriq-like mock infrastructure.
+
+The Amoriq layer:
+
+- accepts only approved actions from the OpenClaw agent layer
+- simulates forwarding orders into financial infrastructure
+- assigns mock order IDs for forwarded actions
+- never executes blocked or clarification-required actions
+- records a realistic execution trail for downstream auditing
 
 ## Final decisions
 
@@ -122,14 +135,31 @@ The core brain now returns one of:
     "agent_decision": "ALLOW",
     "can_execute_any_action": true,
     "requires_user_clarification": false,
+    "amoriq_execution": {
+      "infrastructure": "Amoriq SIM",
+      "forwarded_count": 1,
+      "records": [
+        {
+          "order_id": "amq-sim-001",
+          "infrastructure": "Amoriq SIM",
+          "action": {
+            "type": "buy",
+            "stock": "AAPL"
+          },
+          "status": "FORWARDED",
+          "message": "Approved action forwarded to Amoriq-like financial infrastructure."
+        }
+      ]
+    },
     "execution_log": [
       {
         "action": {
           "type": "buy",
           "stock": "AAPL"
         },
-        "execution_status": "SIMULATED_EXECUTED",
-        "message": "Action is safe and would be executed by the OpenClaw agent."
+        "execution_status": "FORWARDED_TO_AMORIQ",
+        "message": "Action is safe and has been forwarded to Amoriq-like financial infrastructure.",
+        "amoriq_order_id": "amq-sim-001"
       }
     ]
   }
@@ -201,3 +231,4 @@ Example flow:
 3. Financial rules evaluate risk and ambiguity
 4. Enforcement decides `ALLOW`, `BLOCK`, `ASK`, or `PARTIAL`
 5. OpenClaw execution is simulated only for allowed actions
+6. Approved actions are forwarded to the Amoriq simulation layer

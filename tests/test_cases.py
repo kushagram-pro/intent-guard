@@ -1,6 +1,7 @@
 import unittest
 from unittest.mock import patch
 
+from agent.amoriq_adapter import simulate_amoriq_execution
 from agent.openclaw_adapter import simulate_openclaw_agent
 from app import process_input
 from core.ambiguity_checker import build_clarification_plan
@@ -52,6 +53,18 @@ class IntentParserNormalizationTests(unittest.TestCase):
 
 
 class PolicyAndEnforcementTests(unittest.TestCase):
+    def test_amoriq_simulator_only_forwards_approved_actions(self):
+        result = simulate_amoriq_execution(
+            [
+                {"type": "buy", "stock": "AAPL"},
+                {"type": "monitor", "stock": "TSLA"},
+            ]
+        )
+
+        self.assertEqual(result["forwarded_count"], 2)
+        self.assertEqual(result["records"][0]["status"], "FORWARDED")
+        self.assertEqual(result["records"][0]["infrastructure"], "Amoriq SIM")
+
     def test_monitor_intent_is_allowed(self):
         intent_data = {
             "intents": [
@@ -244,6 +257,7 @@ class PolicyAndEnforcementTests(unittest.TestCase):
         self.assertTrue(result["execution_result"]["can_execute_any_action"])
         self.assertTrue(result["execution_result"]["requires_user_clarification"])
         self.assertEqual(len(result["execution_result"]["execution_log"]), 2)
+        self.assertEqual(result["execution_result"]["amoriq_execution"]["forwarded_count"], 1)
 
 
 if __name__ == "__main__":
