@@ -1,41 +1,39 @@
-from config import CONFIDENCE_THRESHOLD
-
-
-ACTION_ALIASES = {
-    "monitor_stock": "monitor",
-    "buy_stock": "buy",
-    "sell_stock": "sell",
-}
-
-
 def evaluate_intents(intent_data):
     results = []
-    for intent in intent_data["intents"]:
-        intent_type = ACTION_ALIASES.get(intent["type"], intent["type"])
+
+    for intent in intent_data.get("intents", []):
         decision = {
-            "type": intent_type,
+            "type": intent.get("type"),
             "status": "ALLOWED",
             "reason": []
         }
 
-        #Rule1: Monitoring is always safe
-        if intent_type == "monitor":
+        intent_type = intent.get("type")
+        condition = intent.get("condition", "").lower()
+        confidence = intent.get("confidence", 0)
+
+        # RULE 1: Monitoring is always safe
+        if intent_type == "monitor_stock":
             decision["status"] = "ALLOWED"
 
-        #Rule2: Trading requires explicit conditions
-        elif intent_type in ["buy", "sell"]:
-            condition = (intent.get("condition") or "").lower()
-            if not condition or "good" in condition or "best time" in condition:
-                decision["status"] = "BLOCKED"
-                decision["reason"].append("Condition is too vague or positive without specifics.")
-            else:                
-                decision["status"] = "ALLOWED"
+        #  RULE 2: Trading rules
+        elif intent_type in ["buy_stock", "sell_stock"]:
 
-        #Rule3: Low confidence ->ambiguous
-        if intent["confidence"] < CONFIDENCE_THRESHOLD:
+            # No condition
+            if not condition:
+                decision["status"] = "BLOCKED"
+                decision["reason"].append("No condition provided for trade")
+
+            # Vague condition
+            elif any(word in condition for word in ["good", "best", "right time", "whenever"]):
+                decision["status"] = "BLOCKED"
+                decision["reason"].append("Vague condition not allowed in financial decisions")
+
+        # RULE 3: Low confidence
+        if confidence < 0.75:
             decision["status"] = "AMBIGUOUS"
-            decision["reason"].append("Low confidence in intent.")
+            decision["reason"].append("Low confidence in intent")
 
         results.append(decision)
-        
+
     return results
