@@ -3,9 +3,9 @@
 {% block content %}
 <div class="auth-layout">
     <section class="auth-copy">
-        <p class="eyebrow">Secure operator access</p>
+        <p class="eyebrow">Sign in</p>
         <h1>Sign in to Intent Guard</h1>
-        <p>Enter the demo credentials below to access the user dashboard and the OpenClaw integration workspace.</p>
+        <p>Use the account below to open the dashboard and test the review flow.</p>
         <div class="credential-card">
             <p><strong>Email:</strong> {{ demo_username }}</p>
             <p><strong>Password:</strong> {{ demo_password }}</p>
@@ -22,8 +22,8 @@
                 <span>Password</span>
                 <input type="password" name="password" value="{{ demo_password }}" required>
             </label>
-            <button type="submit" class="primary-button">Login</button>
-            <p class="form-hint">After login you’ll be redirected straight to the dashboard.</p>
+            <button type="submit" class="primary-button">Sign in</button>
+            <p class="form-hint">After sign-in you will go straight to the dashboard.</p>
             <p class="form-hint">New here? <a href="/signup">Create an account</a>.</p>
             <p class="form-error" data-role="form-error"></p>
         </form>

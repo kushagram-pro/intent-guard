@@ -4,9 +4,9 @@
 <div class="integration-shell">
     <header class="integration-header">
         <div>
-            <p class="eyebrow">OpenClaw trading agent</p>
-            <h1>Integration Console</h1>
-            <p>Connect a simulated OpenClaw operator profile, then test whether Intent Guard intercepts and routes instructions correctly.</p>
+            <p class="eyebrow">Agent Connection</p>
+            <h1>Execution Setup</h1>
+            <p>Connect the agent profile, choose paper or simulation mode, and test how requests move through review and execution.</p>
         </div>
         <nav class="status-pills">
             <a href="/dashboard" class="pill link-pill">Dashboard</a>
@@ -16,7 +16,7 @@
 
     <div class="integration-grid">
         <section class="panel-card">
-            <h2>Agent setup</h2>
+            <h2>Connection Settings</h2>
             <form id="openclaw-connect-form" class="stack-form">
                 <label>
                     <span>Agent name</span>
@@ -39,23 +39,23 @@
                 </label>
                 <button type="submit" class="primary-button">Save Integration</button>
                 <p id="connect-status" class="form-hint">
-                    {% if config.connected %}Connected to {{ config.agent_name }} in {{ config.mode }} mode.{% else %}Not connected yet. Save the agent profile to enable testing.{% endif %}
+                    {% if config.connected %}Connected to {{ config.agent_name }} in {{ config.mode }} mode.{% else %}Not connected yet. Save these settings to start testing.{% endif %}
                 </p>
             </form>
         </section>
 
         <section class="panel-card">
-            <h2>Run simulated OpenClaw instruction</h2>
+            <h2>Test an Instruction</h2>
             <form id="openclaw-simulate-form" class="stack-form">
                 <label>
                     <span>Instruction</span>
                     <textarea name="instruction" rows="5" placeholder="Sell TSLA if price rises above 240"></textarea>
                 </label>
-                <button type="submit" class="primary-button">Simulate Interception</button>
+                <button type="submit" class="primary-button">Run Check</button>
                 <p class="form-error" data-role="simulation-error"></p>
             </form>
             <div id="simulation-output" class="result-card">
-                <p>Simulation results will appear here after you run an instruction.</p>
+                <p>Results will appear here after you run an instruction.</p>
             </div>
         </section>
     </div>

@@ -19,8 +19,8 @@ templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
 
 APP_TITLE = "Intent Guard"
 APP_DESCRIPTION = (
-    "Intent Guard sits between user intent and trading execution, intercepting "
-    "instructions before they reach OpenClaw or downstream financial systems."
+    "Intent Guard reviews financial instructions before they are sent to an agent, "
+    "a paper broker, or any downstream system."
 )
 DEMO_USERNAME = os.getenv("APP_DEMO_USERNAME", "demo@intentguard.ai")
 DEMO_PASSWORD = os.getenv("APP_DEMO_PASSWORD", "intentguard123")
@@ -364,8 +364,8 @@ def _default_chat_history():
         {
             "role": "assistant",
             "content": (
-                "Welcome to Intent Guard. I can review financial instructions, flag risky or "
-                "ambiguous trades, and show what OpenClaw would be allowed to execute."
+                "Welcome to Intent Guard. Enter a trading instruction and I will check it, "
+                "explain the decision, and show what would be sent forward."
             ),
             "summary": {
                 "decision": "READY",
