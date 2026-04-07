@@ -48,6 +48,7 @@ def _evaluate_monitor_intent(intent):
     result = {
         "type": intent.get("type"),
         "stock": intent.get("stock"),
+        "quantity": intent.get("quantity", 0),
         "status": "ALLOW",
         "rule_hits": [],
         "reasons": [],
@@ -67,6 +68,7 @@ def _evaluate_trade_intent(intent, global_ambiguous, global_risk_level):
     result = {
         "type": intent.get("type"),
         "stock": intent.get("stock"),
+        "quantity": intent.get("quantity", 1),
         "status": "ALLOW",
         "rule_hits": [],
         "reasons": [],
@@ -136,6 +138,7 @@ def evaluate_intents(intent_data):
                 {
                     "type": intent_type,
                     "stock": intent.get("stock"),
+                    "quantity": intent.get("quantity", 0),
                     "status": "ASK",
                     "rule_hits": ["RULE_UNKNOWN_ACTION"],
                     "reasons": [POLICY_RULES["RULE_UNKNOWN_ACTION"]["reason"]],

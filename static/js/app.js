@@ -90,7 +90,9 @@ function formatSimulationResult(result) {
 let monitorRefreshTimer = null;
 
 function extractMonitoredSymbol(message) {
-    const intents = message?.details?.intent_data?.intents;
+    const intents =
+        message?.details?.safety_result?.intent_data?.intents
+        || message?.details?.intent_data?.intents;
     if (!Array.isArray(intents)) {
         return "";
     }

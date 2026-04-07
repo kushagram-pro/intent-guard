@@ -286,3 +286,35 @@ Example flow:
 - Unauthorized actions are blocked before execution and logged with reasons and rule hits.
 - Every OpenClaw attempt is written as an immutable audit record to `logs/enforcement_audit.jsonl` with a `trace_id`.
 - No human approval loop exists inside runtime enforcement; allowed actions flow directly to execution path.
+
+## Judging criteria mapping
+
+- Enforcement strength
+  - Unauthorized, vague, high-risk, and unverifiable instructions are deterministically intercepted before execution.
+  - Runtime enforcement happens after parsing and before OpenClaw can forward any action.
+- Architecture clarity
+  - Reasoning is separated from execution:
+    - `models/intent_parser.py` handles LLM reasoning.
+    - `core/policy_engine.py` handles structured policy evaluation.
+    - `core/enforcement.py` handles final execution eligibility.
+    - `agent/amoriq_adapter.py` handles paper/simulated trade forwarding.
+- OpenClaw integration
+  - `agent/openclaw_adapter.py` simulates OpenClaw attempting autonomous actions and routes them through the enforcement layer every time.
+- Real financial use case
+  - Allowed `buy` and `sell` actions can be forwarded to Alpaca paper trading.
+  - Monitoring intents are registered without placing orders.
+  - The system is designed to stop unauthorized trades, scope ambiguity, and unsafe execution.
+- Auditability
+  - Each intercepted attempt receives a trace ID and is logged with execution outcome and decision rationale.
+
+## Alpaca paper trading
+
+1. Copy `.env.example` to `.env`.
+2. Fill in:
+   - `ALPACA_API_KEY`
+   - `ALPACA_SECRET_KEY`
+   - `ALPACA_BASE_URL=https://paper-api.alpaca.markets`
+3. In the web UI OpenClaw page, set mode to `paper`.
+4. Any action that survives enforcement will be forwarded to Alpaca paper trading.
+
+If Alpaca paper mode is requested without credentials, the runtime now raises a clear configuration error instead of silently pretending to be in paper mode.

@@ -149,6 +149,44 @@ def build_clarification_plan(user_input, intent_data, evaluation, final_decision
             },
         }
 
+    if not evaluation.get("intent_results"):
+        return {
+            "needed": True,
+            "message": (
+                "The request could not be parsed into a safe executable financial instruction yet. "
+                "Please restate it using an explicit action, stock symbol, quantity, and measurable trigger."
+            ),
+            "primary_question": (
+                "Please restate the instruction in this format: Buy or sell <quantity> shares of <symbol> "
+                "if price goes above or below <number>."
+            ),
+            "questions": [
+                {
+                    "question": (
+                        "What exact action, stock symbol, quantity, and trigger should be used? "
+                        "Example: Buy 4 shares of TSLA if price rises above 340."
+                    ),
+                    "category": "parse_recovery",
+                    "missing_fields": ["action", "stock", "quantity", "condition"],
+                    "trigger_rule": "GLOBAL_AMBIGUITY",
+                    "examples": [
+                        "Buy 4 shares of TSLA if price rises above 340.",
+                        "Sell 2 shares of AAPL if price falls below 180.",
+                    ],
+                    "target": {
+                        "type": "unknown",
+                        "stock": "unknown",
+                    },
+                }
+            ],
+            "original_user_input": user_input,
+            "summary": {
+                "question_count": 1,
+                "blocked_action_count": len(final_decision.get("blocked_actions", [])),
+                "clarification_action_count": len(final_decision.get("clarification_actions", [])),
+            },
+        }
+
     questions = []
     for intent_result in evaluation.get("intent_results", []):
         if intent_result.get("status") not in {"ASK", "BLOCK", "AMBIGUOUS"}:

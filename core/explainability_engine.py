@@ -34,6 +34,7 @@ def _build_intent_explanation(intent_result):
         "target": {
             "type": action,
             "stock": stock,
+            "quantity": intent_result.get("quantity", 0),
         },
         "status": status,
         "safe_to_execute": safe_to_execute,
@@ -82,6 +83,7 @@ def _build_reason_log(intent_data, evaluation, final_decision):
                 "target": {
                     "type": intent_result.get("type"),
                     "stock": intent_result.get("stock"),
+                    "quantity": intent_result.get("quantity", 0),
                 },
                 "status": intent_result.get("status"),
                 "rule_hits": intent_result.get("rule_hits", []),

@@ -173,7 +173,13 @@ def create_app():
 
         history.append({"role": "user", "content": user_log_content})
 
-        assistant_payload = _build_assistant_payload(effective_input)
+        openclaw_config = request.session.get("openclaw_config") or {}
+        assistant_payload = _build_assistant_payload(
+            effective_input,
+            execution_mode=openclaw_config.get("mode", "simulation"),
+            agent_id=openclaw_config.get("agent_id", "openclaw-sim-001"),
+            agent_name=openclaw_config.get("agent_name", "OpenClaw Trader"),
+        )
         history.append(assistant_payload)
 
         if _is_clarification_required(assistant_payload):
@@ -242,6 +248,7 @@ def create_app():
             instruction,
             agent_id=config.get("agent_id", "openclaw-sim-001"),
             name=config.get("agent_name", "OpenClaw Trader"),
+            execution_mode=config.get("mode", "simulation"),
         )
         return JSONResponse({"ok": True, "result": result})
 
@@ -371,12 +378,24 @@ def _default_chat_history():
     ]
 
 
-def _build_assistant_payload(user_message):
+def _build_assistant_payload(
+    user_message,
+    execution_mode="simulation",
+    agent_id="openclaw-sim-001",
+    agent_name="OpenClaw Trader",
+):
     try:
-        result = process_input(user_message)
-        final = result.get("final", {})
-        clarification = result.get("clarification", {})
-        explainability = result.get("explainability", {})
+        result = simulate_openclaw_agent(
+            user_message,
+            execution_mode=execution_mode,
+            agent_id=agent_id,
+            name=agent_name,
+        )
+        safety_result = result.get("safety_result", {})
+        final = safety_result.get("final", {})
+        clarification = safety_result.get("clarification", {})
+        explainability = result.get("explainability", {}) or safety_result.get("explainability", {})
+        execution_result = result.get("execution_result", {})
         summary = {
             "decision": final.get("decision", "ASK"),
             "risk_level": explainability.get("summary", {}).get("risk_level", "unknown"),
@@ -384,7 +403,7 @@ def _build_assistant_payload(user_message):
             "blocked": len(final.get("blocked_actions", [])),
             "clarification": len(final.get("clarification_actions", [])),
         }
-        content = _format_assistant_message(final, clarification, explainability)
+        content = _format_assistant_message(final, clarification, explainability, execution_result)
         return {
             "role": "assistant",
             "content": content,
@@ -417,7 +436,7 @@ def _is_clarification_required(assistant_payload):
 
 def _extract_primary_question(assistant_payload):
     details = assistant_payload.get("details", {})
-    clarification = details.get("clarification", {})
+    clarification = details.get("safety_result", {}).get("clarification", {})
     return clarification.get("primary_question", "")
 
 
@@ -430,7 +449,7 @@ def _merge_with_pending_clarification(pending, user_message):
     return f"{original}\nClarification from user: {user_message}"
 
 
-def _format_assistant_message(final, clarification, explainability):
+def _format_assistant_message(final, clarification, explainability, execution_result=None):
     decision = final.get("decision", "ASK")
     reasons = final.get("reasons", [])
     reason_text = "\n".join(f"- {reason}" for reason in reasons[:4]) or "- No blocking reasons were recorded."
@@ -442,11 +461,19 @@ def _format_assistant_message(final, clarification, explainability):
         question_text = "- No follow-up questions are needed."
 
     risk_level = explainability.get("summary", {}).get("risk_level", "unknown")
+    execution_lines = []
+    if execution_result:
+        for item in execution_result.get("execution_log", [])[:4]:
+            status = item.get("execution_status", "UNKNOWN")
+            message = item.get("message", "")
+            execution_lines.append(f"- {status}: {message}")
+    execution_text = "\n".join(execution_lines) or "- No execution action was taken."
 
     return (
         f"Decision: {decision}\n"
         f"Risk level: {risk_level}\n\n"
         f"Safety reasons:\n{reason_text}\n\n"
+        f"Execution result:\n{execution_text}\n\n"
         f"Clarification guidance:\n{question_text}"
     )
 

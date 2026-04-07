@@ -8,10 +8,38 @@ from core.ambiguity_checker import build_clarification_plan
 from core.enforcement import enforce_decision
 from core.explainability_engine import build_explainability_report
 from core.policy_engine import evaluate_intents
-from models.intent_parser import _normalize_response
+from models.intent_parser import _normalize_response, _parse_simple_intent
 
 
 class IntentParserNormalizationTests(unittest.TestCase):
+    def test_simple_parser_handles_monitor_instruction(self):
+        result = _parse_simple_intent("Monitor AAPL")
+
+        self.assertIsNotNone(result)
+        self.assertEqual(result["intents"][0]["type"], "monitor")
+        self.assertEqual(result["intents"][0]["stock"], "AAPL")
+        self.assertFalse(result["ambiguous"])
+        self.assertEqual(result["risk_level"], "low")
+
+    def test_simple_parser_handles_trade_with_quantity_and_condition(self):
+        result = _parse_simple_intent("Buy 4 TSLA if price is 340 or above")
+
+        self.assertIsNotNone(result)
+        self.assertEqual(result["intents"][0]["type"], "buy")
+        self.assertEqual(result["intents"][0]["stock"], "TSLA")
+        self.assertEqual(result["intents"][0]["quantity"], 4)
+        self.assertEqual(result["intents"][0]["condition"], "price is 340 or above")
+        self.assertFalse(result["ambiguous"])
+
+    def test_simple_parser_handles_when_condition(self):
+        result = _parse_simple_intent("Buy 4 shares of TSLA when price is above 340")
+
+        self.assertIsNotNone(result)
+        self.assertEqual(result["intents"][0]["type"], "buy")
+        self.assertEqual(result["intents"][0]["stock"], "TSLA")
+        self.assertEqual(result["intents"][0]["quantity"], 4)
+        self.assertEqual(result["intents"][0]["condition"], "price is above 340")
+
     def test_normalizes_action_aliases_and_clamps_confidence(self):
         payload = {
             "intents": [
@@ -89,14 +117,16 @@ class PolicyAndEnforcementTests(unittest.TestCase):
     def test_amoriq_simulator_only_forwards_approved_actions(self):
         result = simulate_amoriq_execution(
             [
-                {"type": "buy", "stock": "AAPL"},
+                {"type": "buy", "stock": "AAPL", "quantity": 4},
                 {"type": "monitor", "stock": "TSLA"},
             ]
         )
 
-        self.assertEqual(result["forwarded_count"], 2)
+        self.assertEqual(result["forwarded_count"], 1)
         self.assertEqual(result["records"][0]["status"], "FORWARDED")
         self.assertEqual(result["records"][0]["infrastructure"], "Amoriq SIM")
+        self.assertIn("4 share(s)", result["records"][0]["message"])
+        self.assertEqual(result["records"][1]["status"], "MONITOR_ONLY")
 
     def test_monitor_intent_is_allowed(self):
         intent_data = {
@@ -197,6 +227,25 @@ class PolicyAndEnforcementTests(unittest.TestCase):
         self.assertIn("concrete trigger", clarification["primary_question"].lower())
         self.assertEqual(clarification["questions"][0]["trigger_rule"], "RULE_VAGUE_CONDITION")
 
+    def test_clarification_engine_recovers_when_parser_returns_no_intents(self):
+        intent_data = {
+            "intents": [],
+            "ambiguous": True,
+            "risk_level": "high",
+        }
+        evaluation = evaluate_intents(intent_data)
+        final = enforce_decision(evaluation, intent_data["ambiguous"])
+        clarification = build_clarification_plan(
+            "Buy 4 TSLA quantities if price is 340 or above",
+            intent_data,
+            evaluation,
+            final,
+        )
+
+        self.assertTrue(clarification["needed"])
+        self.assertEqual(clarification["summary"]["question_count"], 1)
+        self.assertIn("quantity", clarification["primary_question"].lower())
+
     def test_allow_decision_does_not_request_clarification(self):
         intent_data = {
             "intents": [
@@ -296,7 +345,7 @@ class PolicyAndEnforcementTests(unittest.TestCase):
         self.assertTrue(result["execution_result"]["can_execute_any_action"])
         self.assertTrue(result["execution_result"]["requires_user_clarification"])
         self.assertEqual(len(result["execution_result"]["execution_log"]), 2)
-        self.assertEqual(result["execution_result"]["amoriq_execution"]["forwarded_count"], 1)
+        self.assertEqual(result["execution_result"]["amoriq_execution"]["forwarded_count"], 0)
         self.assertIn("explainability", result)
 
 

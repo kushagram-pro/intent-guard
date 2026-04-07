@@ -53,6 +53,7 @@ def enforce_decision(evaluation, overall_ambiguous):
         action_label = {
             "type": item.get("type"),
             "stock": item.get("stock"),
+            "quantity": item.get("quantity", 0),
         }
         status = item.get("status")
 

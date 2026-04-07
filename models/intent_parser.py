@@ -1,4 +1,5 @@
 import json
+import re
 from functools import lru_cache
 
 from google import genai
@@ -45,6 +46,7 @@ MODEL_CANDIDATES = [
 
 VALID_TYPES = {"monitor", "buy", "sell"}
 VALID_RISK_LEVELS = {"low", "medium", "high"}
+SYMBOL_PATTERN = r"[A-Za-z][A-Za-z0-9.\-]{0,9}"
 
 
 def _fallback_response(error_message=None):
@@ -86,6 +88,16 @@ def _normalize_confidence(value):
     return max(0.0, min(1.0, confidence))
 
 
+def _normalize_quantity(value, intent_type):
+    if intent_type == "monitor":
+        return 0
+    try:
+        quantity = int(value)
+    except (TypeError, ValueError):
+        return 1
+    return quantity if quantity > 0 else 1
+
+
 def _normalize_risk_level(value):
     normalized = str(value or "").strip().lower()
     if normalized in VALID_RISK_LEVELS:
@@ -100,9 +112,12 @@ def _normalize_intent(intent):
     normalized = {
         "type": _normalize_type(intent.get("type")),
         "stock": str(intent.get("stock") or "").strip(),
+        "quantity": 0,
         "condition": str(intent.get("condition") or "").strip(),
         "confidence": _normalize_confidence(intent.get("confidence")),
     }
+
+    normalized["quantity"] = _normalize_quantity(intent.get("quantity"), normalized["type"])
 
     if not normalized["type"] or not normalized["stock"]:
         return None
@@ -128,6 +143,77 @@ def _normalize_response(payload):
         "intents": intents,
         "ambiguous": ambiguous if intents else True,
         "risk_level": risk_level if intents else "high",
+    }
+
+
+def _extract_quantity_prefix(text):
+    match = re.match(r"^\s*(\d+)\s+(?:shares?\s+of\s+)?", text, flags=re.IGNORECASE)
+    if not match:
+        return 1, text.strip()
+    quantity = max(1, int(match.group(1)))
+    remainder = text[match.end():].strip()
+    return quantity, remainder
+
+
+def _parse_simple_intent(user_input):
+    text = str(user_input or "").strip()
+    if not text:
+        return None
+
+    monitor_match = re.match(
+        rf"^\s*(monitor|watch|track)\s+({SYMBOL_PATTERN})\s*$",
+        text,
+        flags=re.IGNORECASE,
+    )
+    if monitor_match:
+        return {
+            "intents": [
+                {
+                    "type": "monitor",
+                    "stock": monitor_match.group(2).upper(),
+                    "condition": "",
+                    "confidence": 0.99,
+                }
+            ],
+            "ambiguous": False,
+            "risk_level": "low",
+        }
+
+    trade_match = re.match(
+        rf"^\s*(buy|sell)\s+(.+?)\s+(?:if|when)\s+(.+?)\s*$",
+        text,
+        flags=re.IGNORECASE,
+    )
+    if not trade_match:
+        return None
+
+    action = trade_match.group(1).lower()
+    target_text = trade_match.group(2).strip()
+    condition = trade_match.group(3).strip()
+    quantity, remainder = _extract_quantity_prefix(target_text)
+
+    symbol_match = re.match(
+        rf"^(?:shares?\s+of\s+)?({SYMBOL_PATTERN})\b",
+        remainder,
+        flags=re.IGNORECASE,
+    )
+    if not symbol_match:
+        return None
+
+    symbol = symbol_match.group(1).upper()
+    intent = {
+        "type": action,
+        "stock": symbol,
+        "condition": condition,
+        "confidence": 0.97,
+    }
+    if quantity != 1:
+        intent["quantity"] = quantity
+
+    return {
+        "intents": [intent],
+        "ambiguous": False,
+        "risk_level": "medium",
     }
 
 
@@ -169,6 +255,10 @@ def _models_to_try():
 def parse_intent(user_input):
     if not GEMINI_API_KEY:
         raise ValueError("GEMINI_API_KEY is not set. Add it to .env or your shell environment.")
+
+    simple_intent = _parse_simple_intent(user_input)
+    if simple_intent is not None:
+        return _normalize_response(simple_intent)
 
     client = genai.Client(api_key=GEMINI_API_KEY)
     errors = []
