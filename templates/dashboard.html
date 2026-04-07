@@ -61,6 +61,15 @@
             {% endfor %}
         </section>
 
+        <section id="monitor-panel" class="monitor-panel" data-symbol="">
+            <div class="monitor-header">
+                <h3>Live Monitor</h3>
+                <span id="monitor-symbol">No symbol selected</span>
+            </div>
+            <canvas id="monitor-chart" width="900" height="260"></canvas>
+            <p id="monitor-meta" class="form-hint">Ask to monitor a stock (example: "Monitor AAPL") to start live tracking.</p>
+        </section>
+
         <form id="chat-form" class="composer">
             <textarea name="message" rows="1" placeholder="Try: Buy AAPL if price drops below 180"></textarea>
             <button type="submit" class="primary-button">Send</button>

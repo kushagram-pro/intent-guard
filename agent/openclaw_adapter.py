@@ -1,4 +1,5 @@
 from agent.amoriq_adapter import simulate_amoriq_execution
+from core.audit_logger import new_trace_id, write_audit_log
 from core.explainability_engine import build_explainability_report
 
 
@@ -10,6 +11,7 @@ class OpenClawAgent:
     def attempt_action(self, user_instruction):
         from app import process_input
 
+        trace_id = new_trace_id()
         safety_result = process_input(user_instruction)
         execution_result = _build_execution_result(safety_result)
         explainability = build_explainability_report(
@@ -20,8 +22,23 @@ class OpenClawAgent:
             safety_result.get("clarification", {}),
             execution_result,
         )
+        write_audit_log(
+            event_type="openclaw_execution_attempt",
+            trace_id=trace_id,
+            payload={
+                "agent_id": self.agent_id,
+                "agent_name": self.name,
+                "instruction": user_instruction,
+                "final_decision": safety_result.get("final", {}).get("decision"),
+                "allowed_actions": safety_result.get("final", {}).get("allowed_actions", []),
+                "blocked_actions": safety_result.get("final", {}).get("blocked_actions", []),
+                "clarification_actions": safety_result.get("final", {}).get("clarification_actions", []),
+                "execution_result": execution_result,
+            },
+        )
 
         return {
+            "trace_id": trace_id,
             "agent": {
                 "id": self.agent_id,
                 "name": self.name,
@@ -57,7 +74,7 @@ def _build_execution_result(safety_result):
             {
                 "action": action,
                 "execution_status": "FORWARDED_TO_AMORIQ",
-                "message": "Action is safe and has been forwarded to Amoriq-like financial infrastructure.",
+                "message": "Action is safe and has been forwarded to Amoriq financial infrastructure.",
                 "amoriq_order_id": matching_record["order_id"] if matching_record else None,
             }
         )

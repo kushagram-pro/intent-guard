@@ -1,4 +1,5 @@
 from config import CONFIDENCE_THRESHOLD
+from core.policy_manifest import POLICY_RULES
 
 
 VAGUE_TERMS = {
@@ -57,7 +58,7 @@ def _evaluate_monitor_intent(intent):
         result["status"] = "ASK"
         result["safe_to_execute"] = False
         result["rule_hits"].append("RISK_LOW_CONFIDENCE")
-        result["reasons"].append("Monitoring intent confidence is below the required threshold.")
+        result["reasons"].append(POLICY_RULES["RISK_LOW_CONFIDENCE"]["reason"])
 
     return result
 
@@ -79,39 +80,39 @@ def _evaluate_trade_intent(intent, global_ambiguous, global_risk_level):
         result["status"] = "ASK"
         result["safe_to_execute"] = False
         result["rule_hits"].append("GLOBAL_AMBIGUITY")
-        result["reasons"].append("The overall request is ambiguous and needs clarification.")
+        result["reasons"].append(POLICY_RULES["GLOBAL_AMBIGUITY"]["reason"])
 
     if confidence < CONFIDENCE_THRESHOLD:
         result["status"] = "ASK"
         result["safe_to_execute"] = False
         result["rule_hits"].append("RISK_LOW_CONFIDENCE")
-        result["reasons"].append("Trade intent confidence is below the required threshold.")
+        result["reasons"].append(POLICY_RULES["RISK_LOW_CONFIDENCE"]["reason"])
 
     if not condition:
         result["status"] = "BLOCK"
         result["safe_to_execute"] = False
         result["rule_hits"].append("RULE_MISSING_CONDITION")
-        result["reasons"].append("Trades require an explicit execution condition.")
+        result["reasons"].append(POLICY_RULES["RULE_MISSING_CONDITION"]["reason"])
         return result
 
     if _has_vague_condition(condition):
         result["status"] = "BLOCK"
         result["safe_to_execute"] = False
         result["rule_hits"].append("RULE_VAGUE_CONDITION")
-        result["reasons"].append("The execution condition is too vague for a financial trade.")
+        result["reasons"].append(POLICY_RULES["RULE_VAGUE_CONDITION"]["reason"])
         return result
 
     if not _has_verifiable_condition(condition):
         result["status"] = "ASK"
         result["safe_to_execute"] = False
         result["rule_hits"].append("RULE_UNVERIFIABLE_CONDITION")
-        result["reasons"].append("The execution condition is not specific enough to verify.")
+        result["reasons"].append(POLICY_RULES["RULE_UNVERIFIABLE_CONDITION"]["reason"])
 
     if global_risk_level == "high":
         result["status"] = "ASK"
         result["safe_to_execute"] = False
         result["rule_hits"].append("RISK_HIGH")
-        result["reasons"].append("High-risk trade instructions require manual confirmation.")
+        result["reasons"].append(POLICY_RULES["RISK_HIGH"]["reason"])
 
     return result
 
@@ -137,7 +138,7 @@ def evaluate_intents(intent_data):
                     "stock": intent.get("stock"),
                     "status": "ASK",
                     "rule_hits": ["RULE_UNKNOWN_ACTION"],
-                    "reasons": ["Unknown financial action type requires clarification."],
+                    "reasons": [POLICY_RULES["RULE_UNKNOWN_ACTION"]["reason"]],
                     "safe_to_execute": False,
                 }
             )

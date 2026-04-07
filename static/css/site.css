@@ -21,6 +21,7 @@ body {
     background:
         radial-gradient(circle at top left, rgba(249, 115, 22, 0.2), transparent 30%),
         linear-gradient(160deg, #fcf8f1 0%, #e8eef7 100%);
+    -webkit-font-smoothing: antialiased;
 }
 
 a {
@@ -42,6 +43,56 @@ select {
     min-height: 100vh;
 }
 
+.global-nav {
+    position: sticky;
+    top: 0;
+    z-index: 40;
+    backdrop-filter: blur(16px);
+    background: linear-gradient(90deg, rgba(250, 249, 246, 0.96), rgba(239, 246, 255, 0.96));
+    border-bottom: 1px solid rgba(15, 23, 34, 0.04);
+}
+
+.global-nav-inner {
+    width: min(1240px, calc(100% - 32px));
+    margin: 0 auto;
+    padding: 14px 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+}
+
+.nav-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.brand-text strong {
+    display: block;
+    font-size: 1.05rem;
+}
+
+.global-links {
+    display: flex;
+    gap: 16px;
+    font-size: 0.92rem;
+}
+
+.global-links a {
+    padding: 8px 14px;
+    border-radius: 999px;
+    border: 1px solid transparent;
+    color: #0f172a;
+    opacity: 0.8;
+}
+
+.global-links a:hover {
+    border-color: rgba(15, 23, 42, 0.08);
+    background: rgba(255, 255, 255, 0.9);
+    opacity: 1;
+}
+
 .marketing-nav,
 .marketing-grid,
 .auth-layout,
@@ -49,6 +100,13 @@ select {
 .app-shell {
     width: min(1240px, calc(100% - 32px));
     margin: 0 auto;
+}
+
+.marketing-body .shell,
+.auth-body .auth-layout,
+.app-body .app-shell,
+.app-body .integration-shell {
+    padding-top: 40px;
 }
 
 .marketing-nav {
@@ -349,7 +407,7 @@ select {
 
 .chat-shell {
     display: grid;
-    grid-template-rows: auto 1fr auto;
+    grid-template-rows: auto 1fr auto auto;
     gap: 18px;
     min-height: calc(100vh - 40px);
 }
@@ -441,6 +499,40 @@ select {
     padding: 16px 18px;
 }
 
+.monitor-panel {
+    border-radius: 26px;
+    padding: 16px 18px 12px;
+    background: rgba(20, 32, 51, 0.72);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.monitor-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 10px;
+}
+
+.monitor-header h3 {
+    margin: 0;
+    color: #f8fafc;
+    font-size: 1rem;
+}
+
+#monitor-symbol {
+    color: #93c5fd;
+    font-weight: 600;
+}
+
+#monitor-chart {
+    width: 100%;
+    height: 260px;
+    border-radius: 14px;
+    background: rgba(2, 8, 23, 0.45);
+    border: 1px solid rgba(148, 163, 184, 0.2);
+}
+
 .integration-shell {
     padding: 30px 0 40px;
     color: white;
@@ -477,6 +569,83 @@ select {
     margin: 0;
     white-space: pre-wrap;
     font-family: Consolas, monospace;
+}
+
+.simulation-summary {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+    margin-bottom: 14px;
+}
+
+.simulation-summary div {
+    border-radius: 12px;
+    padding: 10px 12px;
+    background: rgba(249, 115, 22, 0.08);
+    border: 1px solid rgba(249, 115, 22, 0.25);
+}
+
+.simulation-summary span {
+    display: block;
+    color: #94a3b8;
+    font-size: 0.82rem;
+}
+
+.simulation-section {
+    margin-top: 14px;
+}
+
+.simulation-section h3 {
+    margin: 0 0 8px;
+    font-size: 0.98rem;
+}
+
+.simulation-section ul {
+    margin: 0;
+    padding-left: 18px;
+    line-height: 1.6;
+}
+
+.follow-up-highlight {
+    margin: 0 0 10px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    background: rgba(59, 130, 246, 0.12);
+    border: 1px solid rgba(96, 165, 250, 0.38);
+    color: #e2e8f0;
+}
+
+.toast {
+    position: fixed;
+    right: 20px;
+    bottom: 20px;
+    padding: 12px 16px;
+    border-radius: 999px;
+    background: rgba(15, 23, 42, 0.94);
+    color: #e5e7eb;
+    font-size: 0.9rem;
+    box-shadow: 0 18px 45px rgba(15, 23, 42, 0.45);
+    opacity: 0;
+    transform: translateY(10px);
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    z-index: 60;
+}
+
+.toast[data-visible="true"] {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.toast-success {
+    border: 1px solid rgba(34, 197, 94, 0.6);
+}
+
+.toast-error {
+    border: 1px solid rgba(248, 113, 113, 0.7);
+}
+
+.toast-info {
+    border: 1px solid rgba(96, 165, 250, 0.7);
 }
 
 .link-pill {
@@ -527,5 +696,14 @@ select {
     .app-shell,
     .integration-shell {
         width: min(100% - 20px, 1240px);
+    }
+
+    .monitor-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .simulation-summary {
+        grid-template-columns: 1fr;
     }
 }

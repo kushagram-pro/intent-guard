@@ -47,7 +47,7 @@ The OpenClaw layer:
 
 ## Phase 6 goal
 
-Show realistic financial execution by forwarding only approved actions into an Amoriq-like mock infrastructure.
+Show realistic financial execution by forwarding only approved actions into an Amoriq mock infrastructure.
 
 The Amoriq layer:
 
@@ -160,7 +160,7 @@ The core brain now returns one of:
             "stock": "AAPL"
           },
           "status": "FORWARDED",
-          "message": "Approved action forwarded to Amoriq-like financial infrastructure."
+          "message": "Approved action forwarded to Amoriq financial infrastructure."
         }
       ]
     },
@@ -171,7 +171,7 @@ The core brain now returns one of:
           "stock": "AAPL"
         },
         "execution_status": "FORWARDED_TO_AMORIQ",
-        "message": "Action is safe and has been forwarded to Amoriq-like financial infrastructure.",
+        "message": "Action is safe and has been forwarded to Amoriq financial infrastructure.",
         "amoriq_order_id": "amq-sim-001"
       }
     ]
@@ -245,6 +245,9 @@ Buy XYZ if RSI goes below 30.
 ```env
 GEMINI_API_KEY=your_api_key_here
 GEMINI_MODEL=gemini-2.5-flash
+ALPACA_API_KEY=your_paper_key_optional
+ALPACA_SECRET_KEY=your_paper_secret_optional
+ALPACA_BASE_URL=https://paper-api.alpaca.markets
 ```
 
 2. Install dependencies:
@@ -271,3 +274,15 @@ Example flow:
 4. Enforcement decides `ALLOW`, `BLOCK`, `ASK`, or `PARTIAL`
 5. OpenClaw execution is simulated only for allowed actions
 6. Approved actions are forwarded to the Amoriq simulation layer
+
+## Hackathon compliance checklist
+
+- Intent validation and policy enforcement are separate layers (`models/intent_parser.py` -> `core/policy_engine.py` -> `core/enforcement.py`).
+- Policies are structured and deterministic via `core/policy_manifest.py` rule IDs and enforced statuses (`ALLOW`, `BLOCK`, `ASK`, `PARTIAL`).
+- OpenClaw integration is active in `agent/openclaw_adapter.py` and all actions are intercepted before execution.
+- Real action execution uses paper infrastructure:
+  - If Alpaca paper credentials are configured, allowed buy/sell actions are sent to Alpaca paper API.
+  - If not configured (or if paper API fails), execution safely falls back to Amoriq simulation mode.
+- Unauthorized actions are blocked before execution and logged with reasons and rule hits.
+- Every OpenClaw attempt is written as an immutable audit record to `logs/enforcement_audit.jsonl` with a `trace_id`.
+- No human approval loop exists inside runtime enforcement; allowed actions flow directly to execution path.
