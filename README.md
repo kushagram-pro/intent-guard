@@ -1,3 +1,5 @@
+<!-- Final version -->
+
 # Financial Intent Safety Engine
 
 This project now covers seven phases:
