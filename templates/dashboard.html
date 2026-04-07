@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% set body_class = "app-body" %}
+{% block content %}
+<div class="app-shell">
+    <aside class="app-sidebar">
+        <div>
+            <div class="brand-lockup compact">
+                <span class="brand-mark">IG</span>
+                <div>
+                    <p class="eyebrow">Intent Guard</p>
+                    <h1>Control Room</h1>
+                </div>
+            </div>
+            <nav class="sidebar-links">
+                <a href="/dashboard" class="active">Dashboard</a>
+                <a href="/openclaw">OpenClaw Integration</a>
+                <a href="/">Project Home</a>
+            </nav>
+        </div>
+        <div class="sidebar-footer">
+            <div class="user-chip">
+                <strong>{{ user.name }}</strong>
+                <span>{{ user.role }}</span>
+            </div>
+            <form action="/logout" method="post">
+                <button type="submit" class="secondary-button">Logout</button>
+            </form>
+        </div>
+    </aside>
+
+    <main class="chat-shell">
+        <header class="chat-header">
+            <div>
+                <p class="eyebrow">User dashboard</p>
+                <h2>ChatGPT-style safety workspace</h2>
+            </div>
+            <div class="status-pills">
+                <span class="pill">Intent analysis</span>
+                <span class="pill">Risk checks</span>
+                <span class="pill">Execution guardrails</span>
+            </div>
+        </header>
+
+        <section id="chat-thread" class="chat-thread">
+            {% for message in messages %}
+            <article class="message message-{{ message.role }}">
+                <div class="message-avatar">{{ "AI" if message.role == "assistant" else "You" }}</div>
+                <div class="message-card">
+                    <pre>{{ message.content }}</pre>
+                    {% if message.summary %}
+                    <div class="summary-grid">
+                        <div><span>Decision</span><strong>{{ message.summary.decision }}</strong></div>
+                        <div><span>Risk</span><strong>{{ message.summary.risk_level }}</strong></div>
+                        <div><span>Allowed</span><strong>{{ message.summary.allowed }}</strong></div>
+                        <div><span>Blocked</span><strong>{{ message.summary.blocked }}</strong></div>
+                        <div><span>Clarify</span><strong>{{ message.summary.clarification }}</strong></div>
+                    </div>
+                    {% endif %}
+                </div>
+            </article>
+            {% endfor %}
+        </section>
+
+        <form id="chat-form" class="composer">
+            <textarea name="message" rows="1" placeholder="Try: Buy AAPL if price drops below 180"></textarea>
+            <button type="submit" class="primary-button">Send</button>
+        </form>
+    </main>
+</div>
+{% endblock %}

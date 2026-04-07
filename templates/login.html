@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% set body_class = "auth-body" %}
+{% block content %}
+<div class="auth-layout">
+    <section class="auth-copy">
+        <p class="eyebrow">Secure operator access</p>
+        <h1>Sign in to Intent Guard</h1>
+        <p>Enter the demo credentials below to access the user dashboard and the OpenClaw integration workspace.</p>
+        <div class="credential-card">
+            <p><strong>Email:</strong> {{ demo_username }}</p>
+            <p><strong>Password:</strong> {{ demo_password }}</p>
+        </div>
+    </section>
+
+    <section class="auth-panel">
+        <form id="login-form" class="stack-form">
+            <label>
+                <span>Email</span>
+                <input type="email" name="username" value="{{ demo_username }}" required>
+            </label>
+            <label>
+                <span>Password</span>
+                <input type="password" name="password" value="{{ demo_password }}" required>
+            </label>
+            <button type="submit" class="primary-button">Login</button>
+            <p class="form-hint">After login you’ll be redirected straight to the dashboard.</p>
+            <p class="form-error" data-role="form-error"></p>
+        </form>
+    </section>
+</div>
+{% endblock %}
